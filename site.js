@@ -1,16 +1,17 @@
 // Scans a single domain using phantomjs, keeps temporary results in phantom-running and when done, moves it to phantom-done
 
-var fs = require('fs');
-var page = require('webpage').create();
-var system = require('system');
+var fs		= require('fs'),
+	page	= require('webpage').create(),
+	system	= require('system');
+
 
 var rundir = 'phantom-running';
 var donedir = 'phantom-done';
 
 
 
-fs.exists(rundir) || fs.makeDirectory(rundir);
-fs.exists(donedir) || fs.makeDirectory(donedir);
+if (!fs.exists(rundir)) fs.makeDirectory(rundir);
+if (!fs.exists(donedir)) fs.makeDirectory(donedir);
 
 
 if (system.args.length === 1) {
@@ -18,6 +19,7 @@ if (system.args.length === 1) {
 }
 var url = system.args[1];
 var filename = rundir + '/' + url + '.log';
+var donefilename = donedir + '/' + url + '.log';
 var file = fs.open(filename, 'w');
 console.log(url);
 console.log(filename);
@@ -47,9 +49,8 @@ page.onResourceReceived = function(response) {
 page.open('http://' + url, function (status) {
 	logmsg('Done');
 	file.close();
-	var donefile = filename.replace(rundir + '/', donedir + '/');
-	if (fs.exists(donefile)) fs.remove(donefile);
-	fs.move(filename, donefile);
+	if (fs.exists(donefilename)) fs.remove(donefilename);
+	fs.move(filename, donefilename);
 	phantom.exit();
 });
 

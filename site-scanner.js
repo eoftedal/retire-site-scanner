@@ -1,16 +1,17 @@
 // Reads file with domains, and invokes phantomjs with site.js for each domain. Runs 20 phantomjs in parallel
 
-var fs   = require('fs'),
-    lazy = require('lazy'),
-    Emitter = require('events').EventEmitter,
-    spawn = require('child_process').spawn;
+var fs		= require('fs'),
+	lazy	= require('lazy'),
+	Emitter	= require('events').EventEmitter,
+	path	= require('path'),
+	spawn	= require('child_process').spawn;
 
 var threads_max = 20;
 var threads = 0;
 
 var events = new Emitter();
 var donedir = 'phantom-done';
-fs.existsSync(donedir) || fs.mkdirSync(donedir);
+if (!fs.existsSync(donedir)) fs.mkdirSync(donedir);
 
 var timeBegin = new Date().getTime();
 
@@ -53,7 +54,7 @@ var domains = [];
 
 events.on('domain', function(domain) {
 	domains.push(domain);
-	if(domains.length % 1000 == 0) {
+	if(domains.length % 1000 === 0) {
 		console.log('Domains loaded: ' + domains.length);
 	}
 	events.emit('phantom-ready');
@@ -64,7 +65,7 @@ var num = 0;
 events.on('phantom-ready', function() {
 	if (dix >= (domains.length) || threads >= threads_max) return;
 	var domain = domains[dix++];
-	if (!fs.existsSync(donedir + '/' + domain + '.log')) {
+	if (!fs.existsSync(path.join(donedir, domain + '.log'))) {
 		threads++;
 		num++;
 		console.log(threads, num, dix + '/' + domains.length, '(' + Math.round(dix/domains.length*100) + '%)' ,  Math.round((new Date().getTime() - timeBegin)/1000) + 's');

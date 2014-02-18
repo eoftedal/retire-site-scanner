@@ -1,18 +1,19 @@
 // Reads files from phantom-done, checks each javascript and tries to detect files using retire. Keeps temporary results in 
 // results-running and finished scans in results-done.
 
-var fs 		 = require('fs'),
-	lazy	 = require('lazy'),
-	repo     = require('retire/lib/repo'),
-	retire   = require('retire/lib/retire'),
-	Emitter  = require('events').EventEmitter,
-	Url 	 = require('url'),
-	crypto	 = require('crypto'),
-	request  = require('request'),
-	stream   = require('stream'),
-	fork     = require('child_process').fork,
-	spawn    = require('child_process').spawn,
-	readline = require('readline');
+var fs			= require('fs'),
+	lazy		= require('lazy'),
+	repo		= require('retire/lib/repo'),
+	retire		= require('retire/lib/retire'),
+	Emitter		= require('events').EventEmitter,
+	Url			= require('url'),
+	crypto		= require('crypto'),
+	request		= require('request'),
+	stream		= require('stream'),
+	path		= require('path'),
+	fork		= require('child_process').fork,
+	spawn		= require('child_process').spawn,
+	readline	= require('readline');
 
 
 var events = new Emitter();
@@ -23,16 +24,16 @@ var rundir = 'results-running';
 var donedir = 'results-done';
 var phantomdonedir = 'phantom-done';
 
-fs.existsSync(rundir) || fs.mkdirSync(rundir);
-fs.existsSync(donedir) || fs.mkdirSync(donedir);
+if (!fs.existsSync(rundir)) fs.mkdirSync(rundir);
+if (!fs.existsSync(donedir)) fs.mkdirSync(donedir);
 
 
 var hash = {
-  'sha1' : function(data) {
-    shasum   = crypto.createHash('sha1');
-    shasum.update(data);
-    return shasum.digest('hex');
-  }
+	'sha1' : function(data) {
+		shasum = crypto.createHash('sha1');
+		shasum.update(data);
+		return shasum.digest('hex');
+	}
 };
 
 events.on('load-repo', function() {
@@ -64,43 +65,43 @@ function scan(repo, base, url, fd, ev) {
 		return;
 	}
 	try { 
-	   console.log((new Date().getTime()) + ' DL begin: ' + url + ' ...');
-	   var req = request.get(url, function (e, r, data) {
-	     console.log((new Date().getTime()) + ' DL done : ' + url + ' ...');
-	     try {
-		if (context.failed) return;
-		clearTimeout(context.timeout);
-		results = retire.scanFileContent(data, repo, hash);
-		if (results.length > 0) {
-			events.emit('result-ready', base, url, results, fd, 'c');
-		        ev.emit('done');
-			return;
-		} else {
-		     log(fd, '? ' + base + ' ' + url);
-		     ev.emit('done');
-		}
-             } catch(e) {
-		log(fd, 'Failed hash for: ' + url);
-		 ev.emit('done');
-             }
-          }).on('socket', function(socket) {
+		console.log((new Date().getTime()) + ' DL begin: ' + url + ' ...');
+		var req = request.get(url, function (e, r, data) {
+			console.log((new Date().getTime()) + ' DL done : ' + url + ' ...');
+			try {
+				if (context.failed) return;
+				clearTimeout(context.timeout);
+				results = retire.scanFileContent(data, repo, hash);
+				if (results.length > 0) {
+					events.emit('result-ready', base, url, results, fd, 'c');
+					ev.emit('done');
+					return;
+				} else {
+					log(fd, '? ' + base + ' ' + url);
+					ev.emit('done');
+				}
+			} catch(ex) {
+				log(fd, 'Failed hash for: ' + url);
+				ev.emit('done');
+			}
+		}).on('socket', function(socket) {
 		socket.setTimeout(20*1000);
 		context.socket = socket;
 		socket.on('timeout', function() {
 			clearTimeout(context.timeout);
 			context.failed = true;
-        		req.abort();
+			req.abort();
 			log(fs, 'Timeout for: ' + url);
 			ev.emit('done');
-    		});
-	  });
-	  context.timeout = setTimeout(function() {
+		});
+	});
+	context.timeout = setTimeout(function() {
 		context.failed = true;
 		if (context.socket) context.socket.destroy();
 		req.abort();
 		log(fs, 'Timeout for: ' + url);
 		ev.emit('done');
-	  }, 22*1000);
+	}, 22*1000);
 
 
        } catch(e) {
@@ -164,18 +165,18 @@ events.on('scanner-ready', function() {
 	if (!donefiles[i]) return;
 	var domain = donefiles[i].replace(/.log$/, '');
 	console.log(dix, domain);
-	var resultsfile = rundir + '/' + domain + '.log';
-	var resultsdonefile = donedir + '/' + domain + '.log';
+	var resultsfile = path.join(rundir, domain + '.log');
+	var resultsdonefile = path.join(donedir, domain + '.log');
 	if (!fs.existsSync(resultsdonefile)) {
 		var fd = fs.openSync(resultsfile, 'w+');
 		log(fd, 'Begin ' + domain);
-		var outstream = new stream;
+		var outstream = new stream();
 		outstream.readable = true;
 		outstream.writable = true;
 		var rl = readline.createInterface({
-   			input: fs.createReadStream(phantomdonedir + '/' + donefiles[i]),
-    			output: outstream,
-    			terminal: false
+			input: fs.createReadStream(path.join(phantomdonedir, donefiles[i])),
+			output: outstream,
+			terminal: false
 		});
 		var scripts = [];
 		rl.on('line', function(line) {
