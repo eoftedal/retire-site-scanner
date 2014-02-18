@@ -64,7 +64,7 @@ var num = 0;
 events.on('phantom-ready', function() {
 	if (dix >= (domains.length) || threads >= threads_max) return;
 	var domain = domains[dix++];
-	if (!fs.existsSync(donedir + domain + '.log')) {
+	if (!fs.existsSync(donedir + '/' + domain + '.log')) {
 		threads++;
 		num++;
 		console.log(threads, num, dix + '/' + domains.length, '(' + Math.round(dix/domains.length*100) + '%)' ,  Math.round((new Date().getTime() - timeBegin)/1000) + 's');
