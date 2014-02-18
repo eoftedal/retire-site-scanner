@@ -1,0 +1,15 @@
+{
+  "author": "Erlend Oftedal <erlend@oftedal.no>",
+  "name": "retire-site-scanner",
+  "description": "Retire is a tool for detecting use of vulnerable libraries",
+  "version": "0.1.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bekk/retire-site-scanner.js.git"
+  },
+  "dependencies": {
+    "retire"        : "0.1.x",
+    "lazy"	     	: "1.0.x",
+    "request"		: "2.33.x"
+  }
+}
