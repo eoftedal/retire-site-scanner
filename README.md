@@ -32,7 +32,7 @@ In results-done the syntax is
     1392714022790 x f www.example.com http://example.com/js/jquery-1.7.1.min.js jquery 1.7.1.min
     1392714020956 ? www.example.com http://www.example.com/js/weather.js
 
-On the first line it managed to detect the javascript. The first number is a timestamp. The 'x' means vulnerable, while '-' means benign. '?' as seen in the second line, means not identified. The 'f' after the 'x' is which type of detection was used ('f' = filename, 'u' = url, 'c' = filecontents, 'j' = javascript function). Next comes domain, url, library and version.
+On the first line it managed to detect the javascript. The first number is a timestamp. The 'x' means known vulnerabilities, while '-' means no known vulnerabilities. '?' as seen in the second line, means not identified. The 'f' after the 'x' is which type of detection was used ('f' = filename, 'u' = url, 'c' = filecontents, 'j' = javascript function). Next comes domain, url, library and version.
 
 Common analytics scripts like google analytics are not checked and printed as:
 
