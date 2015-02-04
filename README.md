@@ -1,6 +1,6 @@
 Retire-site-scanner
 -------------------
-Simple scanner for scanning a list of domains with [PhantomJS](http://phantomjs.org/) and [RetireJS](http://github.com/bekk/retire.js/)
+Simple scanner for scanning a list of domains with [PhantomJS](http://phantomjs.org/) and [RetireJS](http://github.com/RetireJS/retire.js/)
 
 Prequisites
 -----------
