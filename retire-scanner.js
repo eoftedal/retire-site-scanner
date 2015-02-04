@@ -184,6 +184,11 @@ events.on('scanner-ready', function() {
 				var url = line.split('script: ')[1];
 				scripts.push(url);
 			}
+			if (line.indexOf('component:') !== -1) {
+				var c = JSON.parse(line.split("component:")[1]);
+				var results = retire.check(c.name, c.version, jsrepo);
+				events.emit('result-ready', domain, domain, results, fd, 'j');
+			}
 		});
 		rl.on('close', function() {
 			setTimeout(function() {

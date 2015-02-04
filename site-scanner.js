@@ -2,6 +2,7 @@
 
 var fs		= require('fs'),
 	lazy	= require('lazy'),
+	repo	= require('retire/lib/repo'),
 	Emitter	= require('events').EventEmitter,
 	path	= require('path'),
 	spawn	= require('child_process').spawn;
@@ -11,7 +12,11 @@ var threads = 0;
 
 var events = new Emitter();
 var donedir = 'phantom-done';
+var tmpdir = 'tmp';
 if (!fs.existsSync(donedir)) fs.mkdirSync(donedir);
+if (!fs.existsSync(tmpdir)) fs.mkdirSync(tmpdir);
+
+var funcsfile = tmpdir + '/jsfuncs.js';
 
 var timeBegin = new Date().getTime();
 
@@ -27,7 +32,7 @@ function scan(url) {
 	console.log('Scanning\t' + url + ' ...');
 	var timeout;
 	var begin = new Date().getTime();
-	var child = spawn('phantomjs', ['--load-images=false', 'site.js', url]);
+	var child = spawn('phantomjs', ['--load-images=false', 'site.js', funcsfile, url]);
 	var timed_out = {"value": false };
 	child.on('close', function(code) {
 		var end = (new Date().getTime() - begin) + 'ms';
@@ -64,8 +69,8 @@ var dix = 0;
 var num = 0;
 events.on('phantom-ready', function() {
 	if (dix >= (domains.length) || threads >= threads_max) return;
-	var domain = domains[dix++];
-	if (!fs.existsSync(path.join(donedir, domain + '.log'))) {
+	var domain = domains[dix++].toString();
+	if (!fs.existsSync(path.join(donedir, domain.replace(/\//g, "_") + '.log'))) {
 		threads++;
 		num++;
 		console.log(threads, num, dix + '/' + domains.length, '(' + Math.round(dix/domains.length*100) + '%)' ,  Math.round((new Date().getTime() - timeBegin)/1000) + 's');
@@ -75,10 +80,35 @@ events.on('phantom-ready', function() {
 	}
 });
 
+events.on('begin', function() {
+	console.log('Reading file ' + dfile + ' ...');
+	new lazy(fs.createReadStream(dfile))
+		.lines
+		.forEach(function(domain) {
+			if (domain) events.emit('domain', domain);
+		});
+});
 
-console.log('Reading file ' + dfile + ' ...');
-new lazy(fs.createReadStream(dfile))
-	.lines
-	.forEach(function(domain) {
-		if (domain) events.emit('domain', domain);
+if (!fs.existsSync(funcsfile)) {
+	repo.loadrepository('https://raw.github.com/bekk/retire.js/master/repository/jsrepository.json', {nocache:true})
+		.on('done', function(jsrepo) {
+		var funcs = [];
+		for (var i in jsrepo) {
+			for (var j in jsrepo[i].extractors.func) {
+				funcs.push({"component" : i, func : jsrepo[i].extractors.func[j]});
+			}
+		}
+		fs.writeFile(funcsfile, JSON.stringify(funcs), function(err) {
+			if (err) {
+				console.log(err);
+				process.exit(1);
+			}
+		    events.emit('begin');
+		});	
 	});
+}else {
+	events.emit('begin');
+}
+
+
+

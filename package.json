@@ -8,7 +8,7 @@
     "url": "https://github.com/bekk/retire-site-scanner.js.git"
   },
   "dependencies": {
-    "retire"        : "0.1.x",
+    "retire"        : "0.3.x",
     "lazy"	     	: "1.0.x",
     "request"		: "2.33.x"
   }
