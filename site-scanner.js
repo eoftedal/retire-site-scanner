@@ -32,7 +32,7 @@ function scan(url) {
 	console.log('Scanning\t' + url + ' ...');
 	var timeout;
 	var begin = new Date().getTime();
-	var child = spawn('phantomjs', ['--load-images=false', 'site.js', funcsfile, url]);
+	var child = spawn('phantomjs', ['--load-images=false', '--ssl-protocol=tlsv1', 'site.js', funcsfile, url]);
 	var timed_out = {"value": false };
 	child.on('close', function(code) {
 		var end = (new Date().getTime() - begin) + 'ms';
